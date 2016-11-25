@@ -9,7 +9,7 @@ to try
 Still under development and not refactored yet
 
 This is a script i use to see if the implemented parts are working, these parts are currently working
-(remove not implemented fully yet)
+(remove not implemented fully, does not support directory structure yet)
 
 ```
 set -e
