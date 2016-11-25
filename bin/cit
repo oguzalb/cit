@@ -1,0 +1,37 @@
+#!/usr/bin/python
+import sys
+from citlib.commands import (
+    cat_file, commit, init, status, update_index,
+    write_tree, checkout, log, branch, add)
+
+commands = {
+    "write-tree": write_tree,
+    "commit": commit,
+    "cat-file": cat_file,
+    "init": init,
+    "update-index": update_index,
+    "status": status,
+    "checkout": checkout,
+    "log": log,
+    "branch": branch,
+    "add": add
+}
+
+
+def help():
+    for name, command in commands.iteritems():
+        print name
+        command.help()
+
+if len(sys.argv) < 2:
+    help()
+    sys.exit(1)
+
+command = sys.argv[1]
+if not command in commands:
+    print >>sys.stderr, "Command issued: %s" % (
+        command)
+    help()
+    sys.exit(1)
+
+commands[command].command(sys.argv[1:])
