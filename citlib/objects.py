@@ -109,7 +109,7 @@ IndexEntry = namedtuple('IndexEntry', (
 ))
 
 
-class Index():
+class Index(object):
     def init_file(self, filename):
         print "Initializing init"
         with open(filename, 'w') as f:
@@ -310,7 +310,7 @@ class Index():
         self.index_entries.sort(key=lambda x:x.name)
 
 
-class Commit():
+class Commit(object):
     def __init__(self, treesha1, author, message, parent):
         self.treesha1 = treesha1
         self.author = author
@@ -352,7 +352,7 @@ class Commit():
         return commit
 
 
-class HEAD():
+class HEAD(object):
     def __init__(self):
         self.path = os.path.join(MYGIT_ROOTDIR, 'HEAD')
         self.ref = None
@@ -389,7 +389,7 @@ class HEAD():
             f.write(content)
 
        
-class Branch():
+class Branch(object):
     def __init__(self, name, sha1text=None):
         self.name = name
         self.sha1text = sha1text
