@@ -5,16 +5,16 @@ from citlib.objects import Index, MYGIT_ROOTDIR, Commit, Branch, HEAD, initializ
 
 def help():
     print """
-    usage: commit . -m "message"
+    usage: commit -m "message"
     """
 
 
 def command(argv):
     initialized()
-    if len(argv) < 4 or argv[1] != '.' or argv[2] != '-m':
+    if len(argv) < 3 or argv[1] != '-m':
         help()
         sys.exit(1)
-    message = argv[3]
+    message = argv[2]
     filename = os.path.join(MYGIT_ROOTDIR, 'index')
     index = Index()
     index.load(filename)
