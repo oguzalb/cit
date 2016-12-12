@@ -1,1 +1,1 @@
-import cat_file, commit, init, status, update_index, write_tree
+import cat_file, commit, init, status, update_index, write_tree, diff

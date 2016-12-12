@@ -2,7 +2,7 @@
 import sys
 from citlib.commands import (
     cat_file, commit, init, status, update_index,
-    write_tree, checkout, log, branch, add)
+    write_tree, checkout, log, branch, add, diff)
 
 commands = {
     "write-tree": write_tree,
@@ -14,7 +14,8 @@ commands = {
     "checkout": checkout,
     "log": log,
     "branch": branch,
-    "add": add
+    "add": add,
+    "diff": diff
 }
 
 
