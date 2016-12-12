@@ -229,7 +229,7 @@ class Index(object):
             if index_entry is None:
                 continue
             cur_index_blob = Blob.from_saved_blob(index_entry.sha1)
-            if cur_index_blob.original_content != other_index_blob.original_content:
+            if cur_index_blob.original_content != other_index_blob.original_content or not os.path.exists(filename):
                 print "writing to %s |%s|", (filename, other_index_blob.original_content)
                 with open(filename, "w") as f:
                     f.write(other_index_blob.original_content)

@@ -20,13 +20,13 @@ rm -f hede*.txt
 cit init
 echo "test1" >> hede.txt
 cit add hede.txt
-cit commit . -m "first commit - master branch"
+cit commit -m "first commit - master branch"
 
 echo "test2" >> hede.txt
 touch hede2.txt
 cit update-index --add hede2.txt
 cit add hede.txt
-cit commit . -m "second commit - master branch"
+cit commit -m "second commit - master branch"
 
 cit branch feature1
 cit checkout feature1
@@ -36,7 +36,7 @@ echo "test4" >> hede.txt
 cit update-index --add hede3.txt
 cit update-index --add hede.txt
 cit status
-cit commit . -m "third commit - feature1 branch"
+cit commit -m "third commit - feature1 branch"
 
 cit checkout master
 cit checkout feature1
