@@ -27,11 +27,23 @@ def command(argv):
 
     commit = Commit.from_file(commitsha1)
     commitIndex = index.from_tree(2, commit.treesha1)
+
+    removed, changed, added = index.differences(commitIndex)
+
     print "Added files:"
-    print "\n".join(commitIndex.new_files(index)) + "\n"
-    removed, changed = commitIndex.changed_files(index)
+    print "\n".join(added) + "\n"
     print "Changed files:"
     print "\n".join(changed) + "\n"
     print "Removed files:"
     print "\n".join(removed) + "\n"
-    return commitIndex.new_files(index), removed, changed
+
+    fs_removed, fs_changed, fs_added = index.filesystem_differences()
+    print "Changes not staged for commit"
+    print "Added files:"
+    print "\n".join(fs_added) + "\n"
+    print "Changed files:"
+    print "\n".join(fs_changed) + "\n"
+    print "Removed files:"
+    print "\n".join(fs_removed) + "\n"
+
+    return ((removed, changed, added), (fs_removed, fs_changed, fs_added))

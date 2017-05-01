@@ -19,5 +19,6 @@ def command(argv):
     index = Index()
     index.load(os.path.join(MYGIT_ROOTDIR, 'index'))
     index.remove_file(filename)
+    os.remove(filename)
     index.save(os.path.join(MYGIT_ROOTDIR, 'index'))
 

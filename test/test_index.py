@@ -21,9 +21,11 @@ class TestIndex(unittest.TestCase):
         self.file_count = 0
         self.modification_count = 0
 
-    def create_file(self):
-        self.file_count += 1
-        file_name = 'filename%s.txt' % self.file_count
+    def create_file(self, file_name=None):
+        if file_name is None:
+            self.file_count += 1
+            file_name = 'filename%s.txt' % self.file_count
+
         file_content = 'first_line%s' % self.file_count
         with open(os.path.join(self.repodir, file_name), 'w') as f:
             f.write(file_content)
@@ -33,7 +35,7 @@ class TestIndex(unittest.TestCase):
         self.modification_count += 1
         modification = "file modification %s" % self.modification_count
         with open(os.path.join(self.repodir, file_name), 'a') as f:
-            f.write("file modification %s\n" % self.modification_count)
+            f.write(modification)
 
     def assertIndexEquals(self, file_names):
         index = Index()
@@ -135,32 +137,52 @@ class TestIndex(unittest.TestCase):
         self.assertFilesEqual([file1_name, file2_name])
 
     def test_status(self):
-        file1_name, _ = self.create_file()
-        add_command([file1_name])
-        self.assertIndexEquals([file1_name])
+        removed_file_name, _ = self.create_file('removed_file.txt')
+        add_command([removed_file_name])
+        self.assertIndexEquals([removed_file_name])
         commit_command(['-m', 'first commit'])
 
-        file2_name, _ = self.create_file()
-        add_command([file2_name])
-        self.assertIndexEquals([file1_name, file2_name])
+        modified_fs_removed_file_name, _ = self.create_file('modified_fs_removed_file.txt')
+        add_command([modified_fs_removed_file_name])
+        self.assertIndexEquals([removed_file_name, modified_fs_removed_file_name])
         commit_command(['-m', 'second commit'])
-        self.assertBranchHEADEquals('master', [file1_name, file2_name])
+        self.assertBranchHEADEquals('master', [removed_file_name, modified_fs_removed_file_name])
 
+        # staging differences
         # added file
-        file3_name, _ = self.create_file()
-        add_command([file3_name])
+        added_fs_modified_file_name, _ = self.create_file('added_fs_modified_file.txt')
+        add_command([added_fs_modified_file_name])
 
         # removed file
-        rm_command([file1_name])
+        rm_command([removed_file_name])
 
         # modify file
-        self.modify_file(file2_name)
-        new_files, removed_files, changed_files = status_command([])
+        self.modify_file(modified_fs_removed_file_name)
+        add_command([modified_fs_removed_file_name])
 
-        self.assertEquals(new_files, {file3_name})
-        # TODO fix this
-        #self.assertEquals(removed_files, {file1_name})
-        self.assertEquals(changed_files, [file2_name])
+        # file system differences
+
+        # fs added file
+        fs_added_file_name, _ = self.create_file('fs_added_file.txt')
+
+        # fs removed file
+        os.remove(modified_fs_removed_file_name)
+
+        # fs modified_file
+        self.modify_file(added_fs_modified_file_name)
+
+        (
+            (removed_files, changed_files, new_files),
+            (fs_removed_files, fs_changed_files, fs_new_files)
+        ) = status_command([])
+
+        self.assertEquals(removed_files, [removed_file_name])
+        self.assertEquals(changed_files, [modified_fs_removed_file_name])
+        self.assertEquals(new_files, [added_fs_modified_file_name])
+
+        self.assertEquals(fs_removed_files, [modified_fs_removed_file_name])
+        self.assertEquals(fs_changed_files, [added_fs_modified_file_name])
+        self.assertEquals(fs_new_files, [fs_added_file_name])
 
     def tearDown(self):
         shutil.rmtree(self.repodir)

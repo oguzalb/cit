@@ -7,6 +7,8 @@ from collections import namedtuple
 from string import hexdigits
 
 
+# TODO need to change these when checks are added
+BASEDIR = './'
 MYGIT_ROOTDIR = '.cit'
 OBJECTS_DIR = os.path.join(MYGIT_ROOTDIR, 'objects')
 REFS_DIR = os.path.join(MYGIT_ROOTDIR, 'refs')
@@ -173,26 +175,51 @@ class Index(object):
         index.entry_count = len(index_entries)
         return index
 
-    def new_files(self, other_index):
-        files = {e.name for e in self.index_entries}
-        other_files = {e.name for e in other_index.index_entries}
-        return other_files - files
+    def get_file(self, file_name):
+        return next(
+            (index_entry for index_entry in self.index_entries
+             if index_entry.name == file_name), None)
 
-    def changed_files(self, other_index):
+    def filesystem_differences(self):
+        removed = []
+        changed = []
+        added = []
+        file_names = [f for f in os.listdir(BASEDIR) if f != MYGIT_ROOTDIR]
+        for file_name in file_names:
+            index_entry = self.get_file(file_name)
+            if index_entry is None :
+                added.append(file_name)
+                continue
+            with open(file_name, 'r') as f:
+                content = f.read()
+            blob = Blob.from_saved_blob(index_entry.sha1)
+            if content != blob.original_content:
+                changed.append(index_entry.name)
+        for index_entry in self.index_entries:
+            if index_entry.name not in file_names:
+                removed.append(index_entry.name)
+        return removed, changed, added
+
+    def differences(self, other_index):
         removed = []
         changed = []
         # not yet
         added = []
         for index_entry in self.index_entries:
-            if not os.path.isfile(index_entry.name):
-                removed.append(index_entry.name)
+            other_index_entry = other_index.get_file(index_entry.name)
+            if other_index_entry is None :
+                added.append(index_entry.name)
                 continue
-            with open(index_entry.name, 'r') as f:
-                content = f.read()
+
+            other_blob = Blob.from_saved_blob(other_index_entry.sha1)
             blob = Blob.from_saved_blob(index_entry.sha1)
-            if content != blob.original_content:
+            if other_blob.original_content != blob.original_content:
                 changed.append(index_entry.name)
-        return removed, changed
+        for other_index_entry in other_index.index_entries:
+            if not self.get_file(other_index_entry.name):
+                removed.append(other_index_entry.name)
+        return removed, changed, added
+
 
     def list_nonoverwritable_files_by_index(self, other_index):
         # TODO additional files
@@ -324,7 +351,9 @@ class Index(object):
         self.index_entries.sort(key=lambda x: x.name)
 
     def remove_file(self, filename):
-        index = next((i for i, _ in enumerate(self.index_entries)), None)
+        index = next(
+            (i for i, index_entry in enumerate(self.index_entries)
+             if index_entry.name == filename), None)
         if index is None:
             print >>sys.stderr, "%s is not found" % filename
             sys.exit(1)
