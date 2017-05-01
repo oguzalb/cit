@@ -10,7 +10,7 @@ def help():
 
 
 def command(argv):
-    if len(argv) > 1:
+    if len(argv) > 0:
         help()
         sys.exit(1)
 

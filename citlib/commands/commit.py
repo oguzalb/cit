@@ -11,10 +11,10 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) < 3 or argv[1] != '-m':
+    if len(argv) < 2 or argv[0] != '-m':
         help()
         sys.exit(1)
-    message = argv[2]
+    message = argv[1]
     filename = os.path.join(MYGIT_ROOTDIR, 'index')
     index = Index()
     index.load(filename)

@@ -15,7 +15,7 @@ def command(argv):
         help()
         sys.exit(1)
 
-    filename = argv[1]
+    filename = argv[0]
     index = Index()
     index.load(os.path.join(MYGIT_ROOTDIR, 'index'))
     index.add_file(filename)

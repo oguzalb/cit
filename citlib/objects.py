@@ -161,6 +161,7 @@ class Index(object):
             content = f.read()
         if not content.startswith('tree 0\x00'):
             print >>sys.stderr, "%s is not a tree" % sha1
+            sys.exit(1)
         index = Index()
         i = 7
         index_entries = []
@@ -177,7 +178,7 @@ class Index(object):
         other_files = {e.name for e in other_index.index_entries}
         return other_files - files
 
-    def changed_files(self):
+    def changed_files(self, other_index):
         removed = []
         changed = []
         # not yet
@@ -200,17 +201,22 @@ class Index(object):
             filename = index_entry.name
             other_index_entry = next(
                 (i for i in other_index.index_entries if i.name == index_entry.name), None)
+            # Find the files that are different in the staging (self) and the checkout revision
+            # if there are no differences then doing nothing is fine
+            # if there are differences then we check the file content to see if it is different than the staging
+            # if not, that's also fine
+            # if the file content is changed and it doesn't fit the other branch then we complain
             if other_index_entry is not None and os.path.isfile(filename):
-                other_index_blob = Blob.from_saved_blob(other_index_entry.sha1)
-                cur_comm_blob = Blob.from_saved_blob(index_entry.sha1)
-                if cur_comm_blob.original_content != other_index_blob.original_content:
+                other_index_entry_blob = Blob.from_saved_blob(other_index_entry.sha1)
+                index_entry_blob = Blob.from_saved_blob(index_entry.sha1)
+                if index_entry_blob.original_content != other_index_entry_blob.original_content:
                     print "|%s|%s|1" % (
-                        cur_comm_blob.original_content, other_index_blob.original_content)
+                        index_entry_blob.original_content, other_index_entry_blob.original_content)
                     with open(filename, "r") as f:
                         content = f.read()
-                    if cur_comm_blob.original_content != content:
+                    if index_entry_blob.original_content != content:
                         files.append(filename)
-                        print "|%s|%s|2" % (content, cur_comm_blob.original_content)
+                        print "|%s|%s|2" % (content, index_entry_blob.original_content)
         # check if there will be new files that will be added by the new tree
         # which might override an untracked file
         for other_index_entry in other_index.index_entries:
@@ -220,22 +226,30 @@ class Index(object):
                 files.append(other_index_entry.name)
         return files
 
-    def overwrite_repo(self, other_index):
-        for other_index_entry in other_index.index_entries:
-            filename = other_index_entry.name
-            other_index_blob = Blob.from_saved_blob(other_index_entry.sha1)
+    def overwrite_repo(self, commit_index, target_commit_index):
+        # If the target commit file content is the same content with current commit file content
+        #   don't touch the file
+        # else:
+        #   if the file content is different from current_commit fail
+        for target_commit_index_entry in target_commit_index.index_entries:
+            filename = target_commit_index_entry.name
+            target_commit_blob = Blob.from_saved_blob(target_commit_index_entry.sha1)
             index_entry = next(
-                (i for i in self.index_entries if i.name == other_index_entry.name), None)
+                (i for i in commit_index.index_entries if i.name == target_commit_index_entry.name), None)
             if index_entry is None:
-                continue
-            cur_index_blob = Blob.from_saved_blob(index_entry.sha1)
-            if cur_index_blob.original_content != other_index_blob.original_content or not os.path.exists(filename):
-                print "writing to %s |%s|", (filename, other_index_blob.original_content)
+                print "writing to %s |%s|", (filename, target_commit_blob.original_content)
                 with open(filename, "w") as f:
-                    f.write(other_index_blob.original_content)
+                    f.write(target_commit_blob.original_content)
+                continue
 
-        for index_entry in self.index_entries:
-            if next((i for i in other_index.index_entries if
+            cur_index_blob = Blob.from_saved_blob(index_entry.sha1)
+            if cur_index_blob.original_content != target_commit_blob.original_content or not os.path.exists(filename):
+                print "writing to %s |%s|", (filename, target_commit_blob.original_content)
+                with open(filename, "w") as f:
+                    f.write(target_commit_blob.original_content)
+
+        for index_entry in commit_index.index_entries:
+            if next((i for i in target_commit_index.index_entries if
                      i.name == index_entry.name), None):
                 continue
             if os.path.isfile(index_entry.name):
@@ -307,7 +321,16 @@ class Index(object):
         else:
             self.entry_count += 1
             self.index_entries.append(entry)
+        self.index_entries.sort(key=lambda x: x.name)
+
+    def remove_file(self, filename):
+        index = next((i for i, _ in enumerate(self.index_entries)), None)
+        if index is None:
+            print >>sys.stderr, "%s is not found" % filename
+            sys.exit(1)
+        self.index_entries.pop(index)
         self.index_entries.sort(key=lambda x:x.name)
+        self.entry_count -= 1
 
 
 class Commit(object):

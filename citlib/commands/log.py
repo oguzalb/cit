@@ -10,12 +10,12 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) > 2:
+    if len(argv) != 1:
         help()
         sys.exit(1)
 
-    if len(argv) == 2:
-        branch_name = argv[1]
+    if len(argv) == 1:
+        branch_name = argv[0]
         branch = Branch.from_file(branch_name)
         if branch.sha1text is None:
             print >> sys.stderr, "Branch does not have the first commit"

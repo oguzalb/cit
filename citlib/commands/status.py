@@ -11,7 +11,7 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) > 1:
+    if len(argv) > 0:
         help()
         sys.exit(1)
 
@@ -29,8 +29,9 @@ def command(argv):
     commitIndex = index.from_tree(2, commit.treesha1)
     print "Added files:"
     print "\n".join(commitIndex.new_files(index)) + "\n"
-    removed, changed = commitIndex.changed_files()
+    removed, changed = commitIndex.changed_files(index)
     print "Changed files:"
     print "\n".join(changed) + "\n"
     print "Removed files:"
     print "\n".join(removed) + "\n"
+    return commitIndex.new_files(index), removed, changed

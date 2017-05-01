@@ -2,7 +2,8 @@
 import sys
 from citlib.commands import (
     cat_file, commit, init, status, update_index,
-    write_tree, checkout, log, branch, add, diff)
+    write_tree, checkout, log, branch, add, diff,
+    rm)
 
 commands = {
     "write-tree": write_tree,
@@ -15,7 +16,8 @@ commands = {
     "log": log,
     "branch": branch,
     "add": add,
-    "diff": diff
+    "diff": diff,
+    "rm": rm
 }
 
 
@@ -35,4 +37,4 @@ if not command in commands:
     help()
     sys.exit(1)
 
-commands[command].command(sys.argv[1:])
+commands[command].command(sys.argv[2:])

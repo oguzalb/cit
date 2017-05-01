@@ -9,12 +9,12 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) < 3:
+    if len(argv) < 2:
         help()
         sys.exit(1)
 
-    object_type = argv[1]
-    sha1text = argv[2]
+    object_type = argv[0]
+    sha1text = argv[1]
     if object_type == "blob":
         blob = Blob.from_saved_blob(sha1text)
         print blob.original_content

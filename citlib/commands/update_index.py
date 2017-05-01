@@ -15,11 +15,11 @@ def command(argv):
         help()
         sys.exit(1)
 
-    if argv[1] != '--add':
+    if argv[0] != '--add':
         help()
         sys.exit(1)
 
-    filename = argv[2]
+    filename = argv[1]
     index = Index()
     index.load(os.path.join(MYGIT_ROOTDIR, 'index'))
     index.add_file(filename)

@@ -12,11 +12,11 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) < 2:
+    if len(argv) < 1:
         help()
         sys.exit(1)
 
-    ref = argv[1]
+    ref = argv[0]
     match = re.match("(\w+)(~[1-9][0-9]*){0,1}", ref)
     if match is None:
         help()
@@ -45,16 +45,19 @@ def command(argv):
             print >>sys.stderr, "Last commit doesn't have a parent"
             sys.exit()
         checkout_commit = Commit.from_file(checkout_commit.parent)
-    cur_index = Index()
-    cur_index.load(os.path.join(MYGIT_ROOTDIR, 'index'))
-    checkout_index = Index.from_tree(2, checkout_commit.treesha1)
-    non_overwritable_files = cur_index.list_nonoverwritable_files_by_index(
-        checkout_index)
+    staging = Index()
+    staging.load(os.path.join(MYGIT_ROOTDIR, 'index'))
+    target_commit_index = Index.from_tree(2, checkout_commit.treesha1)
+    non_overwritable_files = staging.list_nonoverwritable_files_by_index(
+        target_commit_index)
     if non_overwritable_files:
         print >> sys.stderr, "original file changed, you shouldn't write onto it %s" % non_overwritable_files
         sys.exit()
-    cur_index.overwrite_repo(checkout_index)
-    checkout_index.save(os.path.join(MYGIT_ROOTDIR, 'index'))
+    current_head = HEAD.from_file()
+    current_commit = Commit.from_file(current_head.sha1)
+    current_index = Index.from_tree(2, current_commit.treesha1)
+    staging.overwrite_repo(current_index, target_commit_index)
+    target_commit_index.save(os.path.join(MYGIT_ROOTDIR, 'index'))
     new_head = HEAD()
     if not prev_count:
         new_head.ref = ref

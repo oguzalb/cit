@@ -25,11 +25,11 @@ def create_branch(branch_name):
 
 def command(argv):
     initialized()
-    if len(argv) == 2:
-        create_branch(argv[1])
+    if len(argv) == 1:
+        create_branch(argv[0])
         return
 
-    if len(argv) == 1:
+    if len(argv) == 0:
         list_branches()
         return
 

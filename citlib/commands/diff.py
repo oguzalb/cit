@@ -12,7 +12,7 @@ def help():
 
 def command(argv):
     initialized()
-    if len(argv) > 1:
+    if len(argv) > 0:
         help()
         sys.exit(1)
 
@@ -46,4 +46,3 @@ def command(argv):
         blob = Blob.from_saved_blob(index_entry.sha1)
         for line in unified_diff(blob.content.split(), [""], fromfile=removed_file, tofile=removed_file):
             print line
-
